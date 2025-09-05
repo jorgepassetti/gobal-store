@@ -76,14 +76,13 @@ const Header = () => {
                   {/* <CustomSelect options={options} /> */}
 
                   <div className='relative max-w-[333px] sm:min-w-[333px] w-full'>
-                    <span className='absolute left-0 top-1/2 -translate-y-1/2 inline-block w-px h-5.5 bg-gray-4'></span>
                     <input
                       onChange={(e) => setSearchQuery(e.target.value)}
                       value={searchQuery}
                       type='search'
                       name='search'
                       id='search'
-                      placeholder='I am shopping for...'
+                      placeholder='Estoy buscando...'
                       autoComplete='off'
                       className='custom-search w-full rounded-r-[5px] bg-gray-1 !border-l-0 border border-gray-3 py-2.5 pl-4 pr-10 outline-none ease-in duration-200'
                     />
