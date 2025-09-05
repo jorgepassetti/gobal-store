@@ -15,7 +15,7 @@ export const menuData: Menu[] = [
   },
   {
     id: 3,
-    title: 'Contact',
+    title: 'Contacto',
     newTab: false,
     path: '/contact',
   },
@@ -45,25 +45,25 @@ export const menuData: Menu[] = [
       },
       {
         id: 65,
-        title: 'Cart',
+        title: 'Carrito',
         newTab: false,
         path: '/cart',
       },
       {
         id: 66,
-        title: 'Wishlist',
+        title: 'Favoritos',
         newTab: false,
         path: '/wishlist',
       },
       {
         id: 67,
-        title: 'Sign in',
+        title: 'Iniciar Sesión',
         newTab: false,
         path: '/signin',
       },
       {
         id: 68,
-        title: 'Sign up',
+        title: 'Crear Cuenta',
         newTab: false,
         path: '/signup',
       },
@@ -75,7 +75,7 @@ export const menuData: Menu[] = [
       },
       {
         id: 70,
-        title: 'Contact',
+        title: 'Contacto',
         newTab: false,
         path: '/contact',
       },

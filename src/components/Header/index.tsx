@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { selectTotalPrice } from '@/redux/features/cart-slice';
 import { useCartModalContext } from '@/app/context/CartSidebarModalContext';
 import Image from 'next/image';
+import MobileSideMenu from './MobileSideMenu';
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,15 +37,9 @@ const Header = () => {
     window.addEventListener('scroll', handleStickyMenu);
   });
 
-  // const options = [
-  //   { label: 'Todas las categorías', value: '0' },
-  //   { label: 'Computadoras', value: '1' },
-  //   { label: 'Laptops', value: '2' },
-  //   { label: 'Monitor', value: '3' },
-  //   { label: 'Celulares', value: '4' },
-  //   { label: 'Relojes', value: '5' },
-  //   { label: 'Tablets', value: '7' },
-  // ];
+  const toggleNavigation = () => {
+    setNavigationOpen(!navigationOpen);
+  };
 
   return (
     <header
@@ -62,16 +57,19 @@ const Header = () => {
           {/* <!-- header top left --> */}
           <div className='md:w-auto flex-col sm:flex-row w-full flex sm:justify-between sm:items-center gap-5 sm:gap-10'>
             {/* <!-- header search --> */}
-            <Link className='flex-shrink-0' href='/'>
+            <Link className='flex-shrink-0 flex justify-center' href='/'>
               <Image
                 src='/images/logo/logo.svg'
                 alt='Logo'
+                className={`   duration-200         ${
+                  stickyMenu ? 'h-[70px]' : 'h-[90px]'
+                }`}
                 width={219}
                 height={36}
               />
-            </Link>{' '}
-            <div className='max-w-[475px] w-full'>
-              <form>
+            </Link>
+            <div className='max-w-[475px] w-full flex items-center'>
+              <form className='w-full'>
                 <div className='flex items-center'>
                   {/* <CustomSelect options={options} /> */}
 
@@ -109,6 +107,48 @@ const Header = () => {
                   </div>
                 </div>
               </form>
+
+              {/* <!-- Hamburger Toggle BTN --> */}
+              <button
+                id='Toggle'
+                aria-label='Toggler'
+                className='md:hidden block ml-4'
+                onClick={() => setNavigationOpen(!navigationOpen)}
+              >
+                <span className='block relative cursor-pointer w-5.5 h-5.5'>
+                  <span className='du-block absolute right-0 w-full h-full'>
+                    <span
+                      className={`block relative top-0 left-0 bg-dark rounded-sm w-0 h-0.5 my-1 ease-in-out duration-200 delay-[0] ${
+                        !navigationOpen && '!w-full delay-300'
+                      }`}
+                    ></span>
+                    <span
+                      className={`block relative top-0 left-0 bg-dark rounded-sm w-0 h-0.5 my-1 ease-in-out duration-200 delay-150 ${
+                        !navigationOpen && '!w-full delay-400'
+                      }`}
+                    ></span>
+                    <span
+                      className={`block relative top-0 left-0 bg-dark rounded-sm w-0 h-0.5 my-1 ease-in-out duration-200 delay-200 ${
+                        !navigationOpen && '!w-full delay-500'
+                      }`}
+                    ></span>
+                  </span>
+
+                  <span className='block absolute right-0 w-full h-full rotate-45'>
+                    <span
+                      className={`block bg-dark rounded-sm ease-in-out duration-200 delay-300 absolute left-2.5 top-0 w-0.5 h-full ${
+                        !navigationOpen && '!h-0 delay-[0] '
+                      }`}
+                    ></span>
+                    <span
+                      className={`block bg-dark rounded-sm ease-in-out duration-200 delay-400 absolute left-0 top-2.5 w-full h-0.5 ${
+                        !navigationOpen && '!h-0 dealy-200'
+                      }`}
+                    ></span>
+                  </span>
+                </span>
+              </button>
+              {/* //   <!-- Hamburger Toggle BTN --> */}
             </div>
           </div>
 
@@ -181,203 +221,20 @@ const Header = () => {
                     </p>
                   </div>
                 </a>
-                <div className='flex items-center gap-2.5'>
-                  <a
-                    className='flex items-center gap-2.5 justify-center w-8 h-8'
-                    href='/wishlist'
-                  >
-                    <span className='relative inline-block'>
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        width='21'
-                        height='18'
-                        viewBox='0 0 21 18'
-                        fill='none'
-                      >
-                        <path
-                          d='M2.72345 2.8023C0.769267 4.75648 0.769268 7.92483 2.72345 9.87901L9.44713 16.6028C10.0329 17.1886 10.9827 17.1886 11.5685 16.6028L18.2922 9.87912C20.2463 7.92494 20.2463 4.75659 18.2922 2.80241C16.338 0.848229 13.1696 0.84823 11.2155 2.80241L10.5079 3.51001L9.80015 2.8023C7.84597 0.848125 4.67762 0.848125 2.72345 2.8023Z'
-                          stroke='#1C274C'
-                          strokeWidth='1.5'
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                        ></path>
-                      </svg>
-                      <span className='flex items-center justify-center font-medium text-2xs absolute -right-2 -top-2.5 bg-red w-4.5 h-4.5 rounded-full text-white'>
-                        1
-                      </span>
-                    </span>
-                  </a>
-                  <button className='flex items-center gap-2.5 w-8 h-8 justify-center'>
-                    <span className='relative inline-block'>
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        width='18'
-                        height='18'
-                        viewBox='0 0 18 18'
-                        fill='none'
-                      >
-                        <path
-                          d='M12 4V5C12 6.65685 10.6569 8 9 8C7.34315 8 6 6.65685 6 5V4M2.5 17H15.5C16.3284 17 17 16.3284 17 15.5V2.5C17 1.67157 16.3284 1 15.5 1H2.5C1.67157 1 1 1.67157 1 2.5V15.5C1 16.3284 1.67157 17 2.5 17Z'
-                          stroke='currentColor'
-                          stroke-width='1.5'
-                          strokeLinecap='round'
-                          stroke-linejoin='round'
-                        ></path>
-                      </svg>
-                      <span className='flex items-center justify-center font-medium text-2xs absolute -right-2 -top-2.5 bg-red w-4.5 h-4.5 rounded-full text-white'>
-                        1
-                      </span>
-                    </span>
-                  </button>
-                </div>
               </div>
-
-              {/* <!-- Hamburger Toggle BTN --> */}
-              <button
-                id='Toggle'
-                aria-label='Toggler'
-                className='md:hidden block'
-                onClick={() => setNavigationOpen(!navigationOpen)}
-              >
-                <span className='block relative cursor-pointer w-5.5 h-5.5'>
-                  <span className='du-block absolute right-0 w-full h-full'>
-                    <span
-                      className={`block relative top-0 left-0 bg-dark rounded-sm w-0 h-0.5 my-1 ease-in-out duration-200 delay-[0] ${
-                        !navigationOpen && '!w-full delay-300'
-                      }`}
-                    ></span>
-                    <span
-                      className={`block relative top-0 left-0 bg-dark rounded-sm w-0 h-0.5 my-1 ease-in-out duration-200 delay-150 ${
-                        !navigationOpen && '!w-full delay-400'
-                      }`}
-                    ></span>
-                    <span
-                      className={`block relative top-0 left-0 bg-dark rounded-sm w-0 h-0.5 my-1 ease-in-out duration-200 delay-200 ${
-                        !navigationOpen && '!w-full delay-500'
-                      }`}
-                    ></span>
-                  </span>
-
-                  <span className='block absolute right-0 w-full h-full rotate-45'>
-                    <span
-                      className={`block bg-dark rounded-sm ease-in-out duration-200 delay-300 absolute left-2.5 top-0 w-0.5 h-full ${
-                        !navigationOpen && '!h-0 delay-[0] '
-                      }`}
-                    ></span>
-                    <span
-                      className={`block bg-dark rounded-sm ease-in-out duration-200 delay-400 absolute left-0 top-2.5 w-full h-0.5 ${
-                        !navigationOpen && '!h-0 dealy-200'
-                      }`}
-                    ></span>
-                  </span>
-                </span>
-              </button>
-              {/* //   <!-- Hamburger Toggle BTN --> */}
             </div>
           </div>
         </div>
         {/* <!-- header top end --> */}
       </div>
 
-      <div className='border-t border-gray-3'>
+      <div className='border-t border-gray-3 h-0 md:h-auto invisible md:visible'>
         <div
-          className={`max-w-[1170px] mx-auto px-4 sm:px-7.5 md:px-0 duration-200 ${
+          className={`max-w-[1170px] mx-auto px-4 sm:px-7.5 md:px-0 duration-200  ${
             stickyMenu ? 'py-0' : 'py-3'
           }`}
         >
           <div className='flex items-center justify-between'>
-            {/* <!--=== Main Nav Start ===--> */}
-            <div
-              className={`w-[288px] absolute right-4 top-full md:static md:w-auto h-0 md:h-auto invisible md:visible md:flex items-center justify-between ${
-                navigationOpen &&
-                `!visible bg-white shadow-lg border border-gray-3 !h-auto max-h-[400px] overflow-y-scroll rounded-md p-5`
-              }`}
-            >
-              <div className='md:w-auto flex-col sm:flex-row w-full flex sm:justify-between sm:items-center gap-5 sm:gap-10'>
-                <Link className='flex-shrink-0' href='/'>
-                  <Image
-                    className='pl-4'
-                    src='/images/logo/logo.svg'
-                    alt='Logo'
-                    width={219}
-                    height={36}
-                  />
-                </Link>
-              </div>
-
-              {/* <!-- Main Nav Start --> */}
-              {/* <nav>
-                <ul className='flex md:items-center flex-col md:flex-row gap-5 md:gap-6'>
-                  {menuData.map((menuItem, i) =>
-                    menuItem.submenu ? (
-                      <Dropdown
-                        key={i}
-                        menuItem={menuItem}
-                        stickyMenu={stickyMenu}
-                      />
-                    ) : (
-                      <li
-                        key={i}
-                        className='group relative before:w-0 before:h-[3px] before:bg-blue before:absolute before:left-0 before:top-0 before:rounded-b-[3px] before:ease-out before:duration-200 hover:before:w-full '
-                      >
-                        <Link
-                          href={menuItem.path}
-                          className={`hover:text-blue text-custom-sm font-medium text-dark flex ${
-                            stickyMenu ? 'md:py-4' : 'md:py-6'
-                          }`}
-                        >
-                          {menuItem.title}
-                        </Link>
-                      </li>
-                    ),
-                  )}
-                </ul>
-              </nav> */}
-
-              <div className='max-w-[475px]'>
-                <form>
-                  <div className='flex items-center'>
-                    {/* <CustomSelect options={options} /> */}
-
-                    <div className='relative max-w-[300px] sm:min-w-[333px] w-full'>
-                      <input
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        value={searchQuery}
-                        type='search'
-                        name='search'
-                        id='search'
-                        placeholder='Estoy buscando...'
-                        autoComplete='off'
-                        className='custom-search w-full rounded-full border border-gray-3 py-2.5 pl-4 pr-10 outline-none ease-in duration-200'
-                      />
-
-                      <button
-                        id='search-btn'
-                        aria-label='Search'
-                        className='flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 ease-in duration-200 hover:text-blue'
-                      >
-                        <svg
-                          className='fill-current'
-                          width='18'
-                          height='18'
-                          viewBox='0 0 18 18'
-                          fill='none'
-                          xmlns='http://www.w3.org/2000/svg'
-                        >
-                          <path
-                            d='M17.2687 15.6656L12.6281 11.8969C14.5406 9.28123 14.3437 5.5406 11.9531 3.1781C10.6875 1.91248 8.99995 1.20935 7.19995 1.20935C5.39995 1.20935 3.71245 1.91248 2.44683 3.1781C-0.168799 5.79373 -0.168799 10.0687 2.44683 12.6844C3.71245 13.95 5.39995 14.6531 7.19995 14.6531C8.91558 14.6531 10.5187 14.0062 11.7843 12.8531L16.4812 16.65C16.5937 16.7344 16.7343 16.7906 16.875 16.7906C17.0718 16.7906 17.2406 16.7062 17.3531 16.5656C17.5781 16.2844 17.55 15.8906 17.2687 15.6656ZM7.19995 13.3875C5.73745 13.3875 4.38745 12.825 3.34683 11.7844C1.20933 9.64685 1.20933 6.18748 3.34683 4.0781C4.38745 3.03748 5.73745 2.47498 7.19995 2.47498C8.66245 2.47498 10.0125 3.03748 11.0531 4.0781C13.1906 6.2156 13.1906 9.67498 11.0531 11.7844C10.0406 12.825 8.66245 13.3875 7.19995 13.3875Z'
-                            fill=''
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-              {/* //   <!-- Main Nav End --> */}
-            </div>
-            {/* // <!--=== Main Nav End ===--> */}
-
             {/* // <!--=== Nav Right Start ===--> */}
             <div className='hidden md:block'>
               <ul className='flex items-center gap-5.5'>
@@ -519,6 +376,11 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      <MobileSideMenu
+        navigationOpen={navigationOpen}
+        setNavigationOpen={setNavigationOpen}
+      />
     </header>
   );
 };
