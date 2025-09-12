@@ -39,7 +39,7 @@ export const menuData: Menu[] = [
       },
       {
         id: 64,
-        title: 'Checkout',
+        title: 'Finalizar compra',
         newTab: false,
         path: '/checkout',
       },

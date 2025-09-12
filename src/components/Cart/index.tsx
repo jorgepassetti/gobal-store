@@ -62,7 +62,15 @@ const Cart = () => {
 
             <div className='flex flex-col lg:flex-row gap-7.5 xl:gap-11 mt-9'>
               <Discount />
-              <OrderSummary />
+
+              <div className='lg:max-w-[455px] w-full mt-7.5'>
+                <Link
+                  href='/checkout'
+                  className='w-full flex justify-center font-medium text-white bg-blue py-[13px] px-6 rounded-md ease-out duration-200 hover:bg-blue-dark'
+                >
+                  Proceder al pago
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -100,13 +108,13 @@ const Cart = () => {
               </svg>
             </div>
 
-            <p className='pb-6'>Your cart is empty!</p>
+            <p className='pb-6'>Tu carrito esta vacio!</p>
 
             <Link
               href='/shop-with-sidebar'
               className='w-96 mx-auto flex justify-center font-medium text-white bg-dark py-[13px] px-6 rounded-md ease-out duration-200 hover:bg-opacity-95'
             >
-              Continue Shopping
+              Continuar comprando
             </Link>
           </div>
         </>
