@@ -17,10 +17,6 @@ const OrderSummary = () => {
   const [error, setError] = useState<string | null>(null);
   const [preferenceId, setPreferenceId] = useState(null);
 
-  useEffect(() => {
-    createPreference();
-  }, []);
-
   // Crear la preferencia de pago en tu backend (esta función se llama cuando se hace clic)
   const createPreference = async () => {
     if (cartItems.length === 0) {
@@ -92,6 +88,10 @@ const OrderSummary = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    createPreference();
+  }, [createPreference]);
 
   return (
     <div className='lg:max-w-[455px] w-full mt-7.5'>

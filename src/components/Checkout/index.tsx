@@ -50,13 +50,13 @@ const Checkout = () => {
               {/* // <!-- checkout right --> */}
               <div className='max-w-[455px] w-full'>
                 {/* <!-- coupon box --> */}
-                <Discount />
+                {/* <Discount /> */}
 
                 {/* <!-- shipping box --> */}
-                <ShippingMethod />
+                {/* <ShippingMethod /> */}
 
                 {/* <!-- payment box --> */}
-                <PaymentMethod />
+                {/* <PaymentMethod /> */}
 
                 {/* <!-- order list box --> */}
                 <OrderSummary />
