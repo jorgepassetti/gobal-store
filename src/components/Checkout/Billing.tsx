@@ -27,27 +27,27 @@ const Billing = () => {
 
   // Initialize form state from Redux (or defaults)
   const [formData, setFormData] = useState({
-    firstName: billingState.firstName || user.billing?.firstName,
-    lastName: billingState.lastName || user.billing?.lastName,
-    email: billingState.email || user.billing?.email,
-    phone: billingState.phone || user.billing?.phone,
-    address: billingState.address || user.billing?.address,
-    addressTwo: billingState.addressTwo || user.billing?.addressTwo,
-    city: billingState.city || user.billing?.city,
-    country: billingState.country || user.billing?.country || 'Argentina',
+    firstName: billingState.firstName || user?.billing?.firstName,
+    lastName: billingState.lastName || user?.billing?.lastName,
+    email: billingState.email || user?.billing?.email,
+    phone: billingState.phone || user?.billing?.phone,
+    address: billingState.address || user?.billing?.address,
+    addressTwo: billingState.addressTwo || user?.billing?.addressTwo,
+    city: billingState.city || user?.billing?.city,
+    country: billingState.country || user?.billing?.country || 'Argentina',
   });
 
   // Sync form with Redux on mount (in case user came back to page)
   useEffect(() => {
     setFormData({
-      firstName: billingState.firstName || user.billing?.firstName,
-      lastName: billingState.lastName || user.billing?.lastName,
-      email: billingState.email || user.billing?.email,
-      phone: billingState.phone || user.billing?.phone,
-      address: billingState.address || user.billing?.address,
-      addressTwo: billingState.addressTwo || user.billing?.addressTwo,
-      city: billingState.city || user.billing?.city,
-      country: billingState.country || user.billing?.country || 'Argentina',
+      firstName: billingState.firstName || user?.billing?.firstName,
+      lastName: billingState.lastName || user?.billing?.lastName,
+      email: billingState.email || user?.billing?.email,
+      phone: billingState.phone || user?.billing?.phone,
+      address: billingState.address || user?.billing?.address,
+      addressTwo: billingState.addressTwo || user?.billing?.addressTwo,
+      city: billingState.city || user?.billing?.city,
+      country: billingState.country || user?.billing?.country || 'Argentina',
     });
     setCreateAccount(billingState.createAccount);
     setPassword(billingState.password || '');

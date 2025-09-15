@@ -28,7 +28,7 @@ const CustomSelect = ({ options }) => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, []);
 
   return (
     <div
