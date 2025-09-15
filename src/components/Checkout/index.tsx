@@ -40,7 +40,7 @@ const Checkout = () => {
         );
       }
     }
-  }, [user]);
+  }, [user, dispatch]);
 
   return (
     <>
