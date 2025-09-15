@@ -35,6 +35,15 @@ export default function RootLayout({
 
   return (
     <html lang='en'>
+      <head>
+        {/* 👇 This prevents browser extensions and iOS from modifying content */}
+        <meta
+          name='format-detection'
+          content='telephone=no,date=no,email=no,address=no'
+        />
+        {/* Optional: prevent some extensions from auto-modifying */}
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
+      </head>
       <body>
         {loading ? (
           <PreLoader />

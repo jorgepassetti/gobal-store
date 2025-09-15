@@ -2,20 +2,27 @@ import { selectTotalPrice } from '@/redux/features/cart-slice';
 import { useAppSelector } from '@/redux/store';
 import React, { useEffect, useState } from 'react';
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react'; // ✅ Este sí existe y es correcto
+import { useAuth } from '@/context/AuthContext';
+import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { v4 as uuidv4 } from 'uuid';
+import { BillingAddress } from '@/redux/features/billing-slice';
+import { ShippingAddress } from '@/redux/features/shipping-slice';
 
 // Inicializa Mercado Pago con tu Public Key
 initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY);
 
-const OrderSummary = () => {
+const OrderSummary = ({ notes }) => {
+  const { user } = useAuth();
   const cartItems = useAppSelector((state) => state.cartReducer.items);
   const totalPrice = useAppSelector(selectTotalPrice);
 
   // 👇 Supón que tienes la dirección guardada en Redux (ej: shippingSlice)
-  const shippingAddress = useAppSelector((state) => state.shippingReducer); // ¡Ajusta según tu estructura!
+  const shipping = useAppSelector((state) => state.shippingReducer); // ¡Ajusta según tu estructura!
+  const billing = useAppSelector((state) => state.billingReducer);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [preferenceId, setPreferenceId] = useState(null);
 
   // Crear la preferencia de pago en tu backend (esta función se llama cuando se hace clic)
   const createPreference = async () => {
@@ -41,20 +48,34 @@ const OrderSummary = () => {
             currency_id: 'ARS', // Cambia a COP, ARS, USD, etc. según tu país
           })),
           payer: {
-            email: shippingAddress?.email || '', // Si lo tienes
-            first_name: shippingAddress?.firstName || '',
-            last_name: shippingAddress?.lastName || '',
+            email: billing?.email || '', // Si lo tienes
+            first_name: billing?.firstName || '',
+            last_name: billing?.lastName || '',
             phone: {
               area_code: '+52', // Ej: +52 para México
-              number: shippingAddress?.phone.replace(/\D/g, '') || '',
+              number: billing?.phone.replace(/\D/g, '') || '',
             },
             address: {
-              zip_code: shippingAddress?.zipCode || '',
-              street_name: shippingAddress?.addressLine1 || '',
-              street_number: shippingAddress?.addressLine2 || '',
-              city_name: shippingAddress?.city || '',
-              state_name: shippingAddress?.state || '',
-              country_id: 'MX', // Código ISO del país
+              zip_code: '0000', // Opcional
+              street_name: shipping?.addressLine1 || '',
+              street_number: shipping?.addressLine2 || '',
+              city_name: shipping?.city || '',
+              state_name: shipping?.state || '',
+              country_id: 'AR', // Código ISO del país
+            },
+          },
+          shipments: {
+            cost: 1530,
+            mode: 'not_specified',
+            receiver_address: {
+              zip_code: '0000',
+              street_name: '0000',
+              street_number: '0000',
+              floor: '0000',
+              apartment: '0000',
+              city_name: '0000',
+              state_name: '0000',
+              country_name: '0000',
             },
           },
           back_urls: {
@@ -78,9 +99,8 @@ const OrderSummary = () => {
       }
 
       const data = await response.json();
-      //return data.id; // ID de la preferencia creada
 
-      setPreferenceId(data.id);
+      return data.id; // ID de la preferencia creada
     } catch (err: any) {
       setError(err.message || 'No pudimos generar el pago. Intenta de nuevo.');
       throw err;
@@ -89,9 +109,123 @@ const OrderSummary = () => {
     }
   };
 
-  useEffect(() => {
-    createPreference();
-  }, [createPreference]);
+  const openMercadopagoPay = async () => {
+    console.log('billing', billing);
+
+    validateBillingAndShipping();
+
+    await saveBillingAndShippingToDB(user.uid, billing, shipping); // Asegúrate de guardar los datos antes de proceder
+    const preferenceId = await createPreference();
+
+    if (!window || !(window as any).MercadoPago) {
+      setError('Mercado Pago no está disponible en este momento.');
+      return;
+    }
+
+    await saveOrderToDB(preferenceId);
+
+    const mp = new (window as any).MercadoPago(
+      process.env.NEXT_PUBLIC_MP_PUBLIC_KEY,
+      {
+        locale: 'es-AR', // Cambia según tu país
+      },
+    );
+
+    if (!preferenceId) {
+      setError('No se pudo iniciar el pago. Intenta de nuevo.');
+      return;
+    }
+
+    mp.checkout({
+      preference: {
+        id: preferenceId,
+      },
+      autoOpen: true, // Abre automáticamente el checkout
+    });
+  };
+
+  const validateBillingAndShipping = () => {
+    if (
+      !billing ||
+      !billing.firstName ||
+      !billing.lastName ||
+      !billing.email ||
+      !billing.phone
+    ) {
+      setError('Por favor completa los detalles de facturación.');
+      throw new Error('Por favor completa los detalles de facturación.');
+    }
+    console.log('shipping', shipping);
+
+    // if (
+    //   !shipping ||
+    //   !shipping.addressLine1 ||
+    //   !shipping.city ||
+    //   !shipping.state ||
+    //   !shipping.country
+    // ) {
+    //   setError('Por favor completa los detalles de envío.');
+    //   throw new Error('Por favor completa los detalles de envío.');
+    // }
+  };
+
+  const saveOrderToDB = async (preferenceId: string) => {
+    try {
+      if (!user) throw new Error('Usuario no autenticado');
+
+      const orderId = uuidv4();
+      const orderRef = doc(collection(db, 'orders'), orderId);
+
+      const newOrder = {
+        id: orderId,
+        userId: user.uid,
+        preferenceId,
+        billing,
+        shipping,
+        items: cartItems,
+        total: totalPrice,
+        createdAt: new Date(),
+        status: 'pending',
+        notes,
+      };
+
+      await setDoc(orderRef, newOrder);
+
+      console.log('Pedido guardado en Firestore ✅');
+
+      return orderId;
+    } catch (error) {
+      console.error('Error saving order to Firestore:', error);
+      throw new Error('No se pudo guardar el pedido.');
+    }
+  };
+
+  // Función para guardar billing y shipping en Firestore
+  const saveBillingAndShippingToDB = async (
+    userId: string,
+    billingData: BillingAddress,
+    shippingData: ShippingAddress,
+  ) => {
+    try {
+      // Referencia al documento del usuario
+      const userRef = doc(db, 'users', userId);
+
+      const { password, retypePassword, ...cleanedData } = billingData;
+      // Actualizar campos
+      await updateDoc(userRef, {
+        billing: cleanedData,
+        shipping: shippingData,
+        updatedAt: new Date(),
+      });
+
+      console.log('Billing y shipping guardados en Firestore ✅');
+    } catch (error) {
+      console.error('Error saving billing and shipping info:', error);
+      throw new Error(
+        'No se pudieron guardar los datos de facturación y envío.',
+      );
+    }
+  };
 
   return (
     <div className='lg:max-w-[455px] w-full mt-7.5'>
@@ -142,7 +276,14 @@ const OrderSummary = () => {
           </div>
 
           {/* <!-- Mercado Pago Button --> */}
-          {preferenceId && <Wallet initialization={{ preferenceId }} />}
+          {/* {preferenceId && <Wallet initialization={{ preferenceId }} />} */}
+
+          <div
+            onClick={() => openMercadopagoPay()}
+            className='inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark w-full justify-center mt-7.5'
+          >
+            Proceder al pago
+          </div>
 
           {/* Mostrar mensaje de error */}
           {error && (

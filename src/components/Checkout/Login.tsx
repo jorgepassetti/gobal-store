@@ -16,7 +16,6 @@ const Login = () => {
 
   // Si ya está logueado, redirige automáticamente
   if (user) {
-    router.push('/dashboard'); // Cambia esto por tu ruta de dashboard
     return null;
   }
 
@@ -28,7 +27,7 @@ const Login = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       // Login exitoso → redirigir
-      router.push('/dashboard');
+      router.push('/');
     } catch (err: any) {
       console.error('Error logging in:', err);
       let message = 'Error al iniciar sesión';

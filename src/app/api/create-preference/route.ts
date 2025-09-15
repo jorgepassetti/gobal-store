@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
         payment_methods: body.payment_methods,
         metadata: body.metadata,
         external_reference: body.metadata.orderId, // Útil para vincular con tu sistema
+        shipments: body.shipments, // Información de envío
       },
     };
 

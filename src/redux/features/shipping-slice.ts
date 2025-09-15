@@ -2,32 +2,20 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 
 const initialState: ShippingAddress = {
-  firstName: '',
-  lastName: '',
   addressLine1: '',
   addressLine2: '',
   city: '',
   state: '',
-  zipCode: '',
-  phone: '',
-  email: '',
   country: '',
-  countryCode: '',
 };
 
 // Estado inicial
-type ShippingAddress = {
-  firstName: '';
-  lastName: '';
-  addressLine1: '';
-  addressLine2: '';
-  city: '';
-  state: '';
-  zipCode: '';
-  phone: '';
-  email: '';
-  country: '';
-  countryCode: '';
+export type ShippingAddress = {
+  country: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
 };
 
 export const shipping = createSlice({
