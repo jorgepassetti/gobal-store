@@ -23,11 +23,6 @@ const Billing = () => {
     billingState.retypePassword || '',
   );
 
-  // If auth state is still loading, show loader
-  if (loading) {
-    return <div className='p-8 text-center'>Cargando...</div>;
-  }
-
   const isLoggedIn = !!user;
 
   // Initialize form state from Redux (or defaults)
@@ -57,8 +52,12 @@ const Billing = () => {
     setCreateAccount(billingState.createAccount);
     setPassword(billingState.password || '');
     setRetypePassword(billingState.retypePassword || '');
-  }, [billingState, isLoggedIn]);
+  }, [billingState, isLoggedIn, user]);
 
+  // If auth state is still loading, show loader
+  if (loading) {
+    return <div className='p-8 text-center'>Cargando...</div>;
+  }
   // Validate passwords
   const isPasswordValid = password === retypePassword && password.length >= 6;
 
