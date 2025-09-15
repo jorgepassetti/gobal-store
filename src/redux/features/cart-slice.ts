@@ -1,5 +1,5 @@
-import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../store";
+import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '../store';
 
 type InitialState = {
   items: CartItem[];
@@ -17,12 +17,27 @@ type CartItem = {
   };
 };
 
+// ... tus imports y tipos
+
 const initialState: InitialState = {
   items: [],
 };
 
+// Cargar estado inicial desde localStorage si existe
+const savedCart = window?.localStorage
+  ? window.localStorage.getItem('cart')
+  : null;
+if (savedCart) {
+  try {
+    initialState.items = JSON.parse(savedCart);
+  } catch (e) {
+    console.error('Error al cargar el carrito desde localStorage', e);
+    initialState.items = [];
+  }
+}
+
 export const cart = createSlice({
-  name: "cart",
+  name: 'cart',
   initialState,
   reducers: {
     addItemToCart: (state, action: PayloadAction<CartItem>) => {
@@ -42,14 +57,20 @@ export const cart = createSlice({
           imgs,
         });
       }
+
+      // Guardar en localStorage
+      localStorage.setItem('cart', JSON.stringify(state.items));
     },
     removeItemFromCart: (state, action: PayloadAction<number>) => {
       const itemId = action.payload;
       state.items = state.items.filter((item) => item.id !== itemId);
+
+      // Guardar en localStorage
+      localStorage.setItem('cart', JSON.stringify(state.items));
     },
     updateCartItemQuantity: (
       state,
-      action: PayloadAction<{ id: number; quantity: number }>
+      action: PayloadAction<{ id: number; quantity: number }>,
     ) => {
       const { id, quantity } = action.payload;
       const existingItem = state.items.find((item) => item.id === id);
@@ -57,10 +78,15 @@ export const cart = createSlice({
       if (existingItem) {
         existingItem.quantity = quantity;
       }
-    },
 
+      // Guardar en localStorage
+      localStorage.setItem('cart', JSON.stringify(state.items));
+    },
     removeAllItemsFromCart: (state) => {
       state.items = [];
+
+      // Guardar en localStorage
+      localStorage.setItem('cart', JSON.stringify(state.items));
     },
   },
 });

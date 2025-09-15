@@ -10,9 +10,11 @@ import { updateproductDetails } from '@/redux/features/product-details';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/redux/store';
 import Link from 'next/link';
+import { useCartModalContext } from '@/app/context/CartSidebarModalContext';
 
 const ProductItem = ({ item }: { item: Product }) => {
   const { openModal } = useModalContext();
+  const { openCartModal } = useCartModalContext();
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -23,6 +25,7 @@ const ProductItem = ({ item }: { item: Product }) => {
 
   // add to cart
   const handleAddToCart = () => {
+    openCartModal();
     dispatch(
       addItemToCart({
         ...item,
