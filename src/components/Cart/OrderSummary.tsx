@@ -23,6 +23,8 @@ const OrderSummary = ({ notes }) => {
   const shipping = useAppSelector((state) => state.shippingReducer); // ¡Ajusta según tu estructura!
   const billing = useAppSelector((state) => state.billingReducer);
 
+  const [preferenceId, setPreferenceId] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,37 +115,11 @@ const OrderSummary = ({ notes }) => {
 
   const openMercadopagoPay = async () => {
     console.log('billing', billing);
-
     validateBillingAndShipping();
-
-    await saveBillingAndShippingToDB(user.uid, billing, shipping); // Asegúrate de guardar los datos antes de proceder
+    await saveBillingAndShippingToDB(user?.uid, billing, shipping); // Asegúrate de guardar los datos antes de proceder
     const preferenceId = await createPreference();
-
-    if (!window || !(window as any).MercadoPago) {
-      setError('Mercado Pago no está disponible en este momento.');
-      return;
-    }
-
     await saveOrderToDB(preferenceId);
-
-    const mp = new (window as any).MercadoPago(
-      process.env.NEXT_PUBLIC_MP_PUBLIC_KEY,
-      {
-        locale: 'es-AR', // Cambia según tu país
-      },
-    );
-
-    if (!preferenceId) {
-      setError('No se pudo iniciar el pago. Intenta de nuevo.');
-      return;
-    }
-
-    mp.checkout({
-      preference: {
-        id: preferenceId,
-      },
-      autoOpen: true, // Abre automáticamente el checkout
-    });
+    setPreferenceId(preferenceId);
   };
 
   const validateBillingAndShipping = () => {
@@ -180,7 +156,7 @@ const OrderSummary = ({ notes }) => {
 
       const newOrder = {
         id: orderId,
-        userId: user.uid,
+        userId: user?.uid,
         preferenceId,
         billing,
         shipping,
@@ -278,14 +254,23 @@ const OrderSummary = ({ notes }) => {
           </div>
 
           {/* <!-- Mercado Pago Button --> */}
-          {/* {preferenceId && <Wallet initialization={{ preferenceId }} />} */}
+          {preferenceId && (
+            <Wallet initialization={{ preferenceId }} locale='es-AR' />
+          )}
 
-          <div
-            onClick={() => openMercadopagoPay()}
-            className='inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark w-full justify-center mt-7.5'
-          >
-            Proceder al pago
-          </div>
+          {!preferenceId && (
+            <button
+              onClick={openMercadopagoPay}
+              disabled={loading}
+              className={`inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] ${
+                loading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue text-white hover:bg-blue-dark'
+              } ease-out duration-200 w-full justify-center mt-7.5`}
+            >
+              {loading ? 'Generando pago...' : 'Pagar con Mercado Pago'}
+            </button>
+          )}
 
           {/* Mostrar mensaje de error */}
           {error && (
