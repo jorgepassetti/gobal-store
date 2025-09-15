@@ -153,12 +153,13 @@ const OrderSummary = ({ notes }) => {
 
       const orderId = uuidv4();
       const orderRef = doc(collection(db, 'orders'), orderId);
+      const { password, retypePassword, ...cleanedData } = billing;
 
       const newOrder = {
         id: orderId,
         userId: user?.uid,
         preferenceId,
-        billing,
+        billing: cleanedData,
         shipping,
         items: cartItems,
         total: totalPrice,
@@ -189,6 +190,9 @@ const OrderSummary = ({ notes }) => {
       const userRef = doc(db, 'users', userId);
 
       const { password, retypePassword, ...cleanedData } = billingData;
+
+      console.log('cleanedData', cleanedData);
+
       // Actualizar campos
       await updateDoc(userRef, {
         billing: cleanedData,
