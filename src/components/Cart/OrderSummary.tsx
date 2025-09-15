@@ -1,3 +1,5 @@
+'use client';
+
 import { selectTotalPrice } from '@/redux/features/cart-slice';
 import { useAppSelector } from '@/redux/store';
 import React, { useEffect, useState } from 'react';
