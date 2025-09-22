@@ -2,17 +2,22 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import ProductItem from '@/components/Common/ProductItem';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Product } from '@/types/product';
 
 const NewArrival = async () => {
   const productsRef = collection(db, 'products');
-  const activeQuery = query(productsRef, where('status', '==', 'active'));
+  const activeQuery = query(
+    productsRef,
+    where('status', '==', 'active'),
+    limit(8),
+  );
   const snapshot = await getDocs(activeQuery);
 
   const products = snapshot.docs.map((doc) => {
     const data = doc.data();
+    console.log(data);
 
     return {
       id: doc.id,
@@ -25,7 +30,7 @@ const NewArrival = async () => {
   if (!products?.length) return <p>No hay productos disponibles.</p>;
 
   return (
-    <section className='overflow-hidden pt-15'>
+    <section className='overflow-hidden pt-15 mb-20'>
       <div className='max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0'>
         {/* <!-- section title --> */}
         <div className='mb-7 flex items-center justify-between'>

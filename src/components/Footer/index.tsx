@@ -32,7 +32,7 @@ const Footer = () => {
                     />
                   </svg>
                 </span>
-                685 Market Street,Las Vegas, LA 95820,United States.
+                Córdoba, Argentina
               </li>
 
               <li>
@@ -81,7 +81,7 @@ const Footer = () => {
                       fill='#3C50E0'
                     />
                   </svg>
-                  support@example.com
+                  soporte@store.gobal.com.ar
                 </a>
               </li>
             </ul>
@@ -209,22 +209,12 @@ const Footer = () => {
               </li>
               <li>
                 <a className='ease-out duration-200 hover:text-blue' href='#'>
-                  Login / Register
+                  Iniciar Sesión / Crear Cuenta
                 </a>
               </li>
               <li>
                 <a className='ease-out duration-200 hover:text-blue' href='#'>
                   Carrito
-                </a>
-              </li>
-              <li>
-                <a className='ease-out duration-200 hover:text-blue' href='#'>
-                  Wishlist
-                </a>
-              </li>
-              <li>
-                <a className='ease-out duration-200 hover:text-blue' href='#'>
-                  Shop
                 </a>
               </li>
             </ul>
