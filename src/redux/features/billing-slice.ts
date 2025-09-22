@@ -9,11 +9,9 @@ export type BillingAddress = {
   phone: string;
   address: string;
   addressTwo: string;
+  state: string;
   city: string;
   country: string;
-  createAccount: boolean;
-  password?: string;
-  retypePassword?: string;
 };
 
 const initialState: BillingAddress = {
@@ -23,11 +21,9 @@ const initialState: BillingAddress = {
   phone: '',
   address: '',
   addressTwo: '',
+  state: '',
   city: '',
   country: 'Argentina',
-  createAccount: false,
-  password: undefined,
-  retypePassword: undefined,
 };
 
 export const billing = createSlice({

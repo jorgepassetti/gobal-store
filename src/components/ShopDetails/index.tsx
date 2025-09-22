@@ -80,8 +80,7 @@ const ShopDetails = () => {
     (state) => state.productDetailsReducer.value,
   );
 
-  const product = alreadyExist ? JSON.parse(alreadyExist) : productFromStorage;
-
+  const product = {} as any;
   useEffect(() => {
     localStorage.setItem('productDetails', JSON.stringify(product));
   }, [product]);

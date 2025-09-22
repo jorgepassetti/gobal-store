@@ -6,8 +6,10 @@ import { useAppSelector } from '@/redux/store';
 import SingleItem from './SingleItem';
 import Breadcrumb from '../Common/Breadcrumb';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 const Cart = () => {
+  const { user } = useAuth();
   const cartItems = useAppSelector((state) => state.cartReducer.items);
 
   return (
@@ -65,7 +67,7 @@ const Cart = () => {
 
               <div className='lg:max-w-[455px] w-full mt-7.5'>
                 <Link
-                  href='/checkout'
+                  href={!!user ? '/checkout' : '/signup'}
                   className='w-full flex justify-center font-medium text-white bg-blue py-[13px] px-6 rounded-md ease-out duration-200 hover:bg-blue-dark'
                 >
                   Proceder al pago

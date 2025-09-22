@@ -5,8 +5,10 @@ const initialState: ShippingAddress = {
   addressLine1: '',
   addressLine2: '',
   city: '',
+  zipcode: '',
   state: '',
   country: '',
+  phone: '',
 };
 
 // Estado inicial
@@ -16,6 +18,8 @@ export type ShippingAddress = {
   addressLine2: string;
   city: string;
   state: string;
+  zipcode: string;
+  phone: string;
 };
 
 export const shipping = createSlice({

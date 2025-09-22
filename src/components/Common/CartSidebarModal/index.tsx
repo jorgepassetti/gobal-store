@@ -11,8 +11,10 @@ import { useSelector } from 'react-redux';
 import SingleItem from './SingleItem';
 import Link from 'next/link';
 import EmptyCart from './EmptyCart';
+import { useAuth } from '@/context/AuthContext';
 
 const CartSidebarModal = () => {
+  const { user } = useAuth();
   const { isCartModalOpen, closeCartModal } = useCartModalContext();
   const cartItems = useAppSelector((state) => state.cartReducer.items);
 
@@ -108,7 +110,7 @@ const CartSidebarModal = () => {
               </Link>
 
               <Link
-                href='/checkout'
+                href={!!user ? '/checkout' : '/signup'}
                 onClick={() => closeCartModal()}
                 className='w-full flex justify-center font-medium text-white bg-dark py-[13px] px-6 rounded-md ease-out duration-200 hover:bg-opacity-95'
               >

@@ -1,10 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import ProductItem from '@/components/Common/ProductItem';
-import shopData from '@/components/Shop/shopData';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Product } from '@/types/product';
 
-const NewArrival = () => {
+const NewArrival = async () => {
+  const productsRef = collection(db, 'products');
+  const activeQuery = query(productsRef, where('status', '==', 'active'));
+  const snapshot = await getDocs(activeQuery);
+
+  const products = snapshot.docs.map((doc) => {
+    const data = doc.data();
+
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data.createdAt?.toDate
+        ? data.createdAt.toDate().toISOString()
+        : null,
+    } as unknown as Product;
+  });
+  if (!products?.length) return <p>No hay productos disponibles.</p>;
+
   return (
     <section className='overflow-hidden pt-15'>
       <div className='max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0'>
@@ -46,9 +65,9 @@ const NewArrival = () => {
           </Link>
         </div>
 
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-7.5 gap-y-9'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-7.5 gap-y-9 mb-4'>
           {/* <!-- New Arrivals item --> */}
-          {shopData.map((item, key) => (
+          {products.map((item, key) => (
             <ProductItem item={item} key={key} />
           ))}
         </div>

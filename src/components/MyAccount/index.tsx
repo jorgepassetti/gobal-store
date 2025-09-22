@@ -131,10 +131,10 @@ const MyAccount = () => {
                       Dirección
                     </button>
 
-                    <button
-                      onClick={() => setActiveTab('account-details')}
+                    {/* <button
+                      onClick={() => setActiveTab('account-details s')}
                       className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${
-                        activeTab === 'account-details'
+                        activeTab === 'account-details -'
                           ? 'text-white bg-blue'
                           : 'text-dark-2 bg-gray-1'
                       }`}
@@ -161,7 +161,7 @@ const MyAccount = () => {
                         />
                       </svg>
                       Detalles de Cuenta
-                    </button>
+                    </button> */}
 
                     <button
                       onClick={() => setActiveTab('logout')}
@@ -243,7 +243,7 @@ const MyAccount = () => {
               <div className='xl:max-w-[370px] w-full bg-white shadow-1 rounded-xl'>
                 <div className='flex items-center justify-between py-5 px-4 sm:pl-7.5 sm:pr-6 border-b border-gray-3'>
                   <p className='font-medium text-xl text-dark'>
-                    Shipping Address
+                    Direccion de Envío
                   </p>
 
                   <button
@@ -292,7 +292,7 @@ const MyAccount = () => {
                           fill=''
                         />
                       </svg>
-                      Name: James Septimus
+                      Nombre: {user.displayName}
                     </p>
 
                     <p className='flex items-center gap-2.5 text-custom-sm'>
@@ -311,7 +311,7 @@ const MyAccount = () => {
                           fill=''
                         />
                       </svg>
-                      Email: jamse@example.com
+                      Email: {user.email}
                     </p>
 
                     <p className='flex items-center gap-2.5 text-custom-sm'>
@@ -340,7 +340,7 @@ const MyAccount = () => {
                           fill=''
                         />
                       </svg>
-                      Phone: 1234 567890
+                      Celular: {user.shipping.phone || 'No registrado'}
                     </p>
 
                     <p className='flex gap-2.5 text-custom-sm'>
@@ -366,13 +366,18 @@ const MyAccount = () => {
                           </clipPath>
                         </defs>
                       </svg>
-                      Address: 7398 Smoke Ranch RoadLas Vegas, Nevada 89128
+                      Address:{' '}
+                      {`${user.shipping.addressLine1 || 'No registrado'},${
+                        user.shipping.addressLine2 || 'No registrado'
+                      }, ${user.shipping.city || ''} - ${
+                        user.shipping.state || ''
+                      } - ${user.shipping.zipcode || ''}`}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className='xl:max-w-[370px] w-full bg-white shadow-1 rounded-xl'>
+              {/* <div className='xl:max-w-[370px] w-full bg-white shadow-1 rounded-xl'>
                 <div className='flex items-center justify-between py-5 px-4 sm:pl-7.5 sm:pr-6 border-b border-gray-3'>
                   <p className='font-medium text-xl text-dark'>
                     Billing Address
@@ -502,7 +507,7 @@ const MyAccount = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
             {/* <!-- addresses tab content end -->
 
@@ -517,7 +522,7 @@ const MyAccount = () => {
                   <div className='flex flex-col lg:flex-row gap-5 sm:gap-8 mb-5'>
                     <div className='w-full'>
                       <label htmlFor='firstName' className='block mb-2.5'>
-                        First Name <span className='text-red'>*</span>
+                        Nombre <span className='text-red'>*</span>
                       </label>
 
                       <input

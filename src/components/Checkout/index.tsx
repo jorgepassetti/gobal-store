@@ -55,7 +55,7 @@ const Checkout = () => {
                 <Login />
 
                 {/* <!-- billing details --> */}
-                <Billing />
+                {/* <Billing /> */}
 
                 {/* <!-- address box two --> */}
                 <Shipping />
@@ -81,7 +81,7 @@ const Checkout = () => {
               </div>
 
               {/* // <!-- checkout right --> */}
-              <div className='max-w-[455px] w-full mt-14.5'>
+              <div className='max-w-[455px] w-full'>
                 {/* <!-- coupon box --> */}
                 {/* <Discount /> */}
 

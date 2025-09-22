@@ -7,14 +7,41 @@ import GenderDropdown from './GenderDropdown';
 import SizeDropdown from './SizeDropdown';
 import ColorsDropdwon from './ColorsDropdwon';
 import PriceDropdown from './PriceDropdown';
-import shopData from '../Shop/shopData';
 import SingleGridItem from '../Shop/SingleGridItem';
 import SingleListItem from '../Shop/SingleListItem';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Product } from '@/types/product';
 
 const ShopWithSidebar = () => {
   const [productStyle, setProductStyle] = useState('grid');
   const [productSidebar, setProductSidebar] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  const getProducts = async () => {
+    const productsRef = collection(db, 'products');
+    const activeQuery = query(productsRef, where('status', '==', 'active'));
+    const snapshot = await getDocs(activeQuery);
+
+    const products = snapshot.docs.map((doc) => {
+      const data = doc.data();
+
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate
+          ? data.createdAt.toDate().toISOString()
+          : null,
+      } as unknown as Product;
+    });
+
+    setProducts(products);
+  };
+
+  useEffect(() => {
+    getProducts();
+  }, []);
 
   const handleStickyMenu = () => {
     if (window.scrollY >= 80) {
@@ -25,9 +52,9 @@ const ShopWithSidebar = () => {
   };
 
   const options = [
-    { label: 'Latest Products', value: '0' },
-    { label: 'Best Selling', value: '1' },
-    { label: 'Old Products', value: '2' },
+    { label: 'Últimos Productos', value: '0' },
+    { label: 'Mas Vendidos', value: '1' },
+    { label: 'Productos Viejos', value: '2' },
   ];
 
   const categories = [
@@ -103,7 +130,7 @@ const ShopWithSidebar = () => {
         title={'Explorar todos los Productos'}
         pages={['shop', '/', 'shop with sidebar']}
       />
-      <section className='overflow-hidden relative pb-20 pt-5 lg:pt-20 xl:pt-28 bg-[#f3f4f6]'>
+      <section className='overflow-hidden relative pb-20 pt-5 lg:pt-20 xl:pt-20 bg-[#f3f4f6]'>
         <div className='max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0'>
           <div className='flex gap-7.5'>
             {/* <!-- Sidebar Start --> */}
@@ -151,8 +178,8 @@ const ShopWithSidebar = () => {
                   {/* <!-- filter box --> */}
                   <div className='bg-white shadow-1 rounded-lg py-4 px-5'>
                     <div className='flex items-center justify-between'>
-                      <p>Filters:</p>
-                      <button className='text-blue'>Clean All</button>
+                      <p>Filtros:</p>
+                      <button className='text-blue'>Limpiar</button>
                     </div>
                   </div>
 
@@ -160,13 +187,13 @@ const ShopWithSidebar = () => {
                   <CategoryDropdown categories={categories} />
 
                   {/* <!-- gender box --> */}
-                  <GenderDropdown genders={genders} />
+                  {/* <GenderDropdown genders={genders} /> */}
 
                   {/* // <!-- size box --> */}
-                  <SizeDropdown />
+                  {/* <SizeDropdown /> */}
 
                   {/* // <!-- color box --> */}
-                  <ColorsDropdwon />
+                  {/* <ColorsDropdwon /> */}
 
                   {/* // <!-- price range box --> */}
                   <PriceDropdown />
@@ -184,8 +211,8 @@ const ShopWithSidebar = () => {
                     <CustomSelect options={options} />
 
                     <p>
-                      Showing <span className='text-dark'>9 of 50</span>{' '}
-                      Products
+                      Mostrando <span className='text-dark'>9 de 50</span>{' '}
+                      Productos
                     </p>
                   </div>
 
@@ -278,7 +305,7 @@ const ShopWithSidebar = () => {
                     : 'flex flex-col gap-7.5'
                 }`}
               >
-                {shopData.map((item, key) =>
+                {products.map((item, key) =>
                   productStyle === 'grid' ? (
                     <SingleGridItem item={item} key={key} />
                   ) : (

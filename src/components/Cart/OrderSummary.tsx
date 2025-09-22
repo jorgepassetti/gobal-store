@@ -1,9 +1,8 @@
 'use client';
 
-import { selectTotalPrice } from '@/redux/features/cart-slice';
+import { CartItem, selectTotalPrice } from '@/redux/features/cart-slice';
 import { useAppSelector } from '@/redux/store';
 import React, { useEffect, useState } from 'react';
-import { initMercadoPago, Wallet } from '@mercadopago/sdk-react'; // ✅ Este sí existe y es correcto
 import { useAuth } from '@/context/AuthContext';
 import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -11,8 +10,18 @@ import { v4 as uuidv4 } from 'uuid';
 import { BillingAddress } from '@/redux/features/billing-slice';
 import { ShippingAddress } from '@/redux/features/shipping-slice';
 
-// Inicializa Mercado Pago con tu Public Key
-initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY);
+export type Order = {
+  id: string;
+  userId: string;
+  preferenceId: string;
+  billing: BillingAddress;
+  shipping: ShippingAddress;
+  items: CartItem[];
+  total: number;
+  createdAt: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  notes: string;
+};
 
 const OrderSummary = ({ notes }) => {
   const { user } = useAuth();
@@ -22,8 +31,6 @@ const OrderSummary = ({ notes }) => {
   // 👇 Supón que tienes la dirección guardada en Redux (ej: shippingSlice)
   const shipping = useAppSelector((state) => state.shippingReducer); // ¡Ajusta según tu estructura!
   const billing = useAppSelector((state) => state.billingReducer);
-
-  const [preferenceId, setPreferenceId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,54 +52,30 @@ const OrderSummary = ({ notes }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items: cartItems.map((item) => ({
-            title: item.title,
-            quantity: item.quantity,
-            unit_price: item.discountedPrice,
-            currency_id: 'ARS', // Cambia a COP, ARS, USD, etc. según tu país
-          })),
-          payer: {
-            email: billing?.email || '', // Si lo tienes
-            first_name: billing?.firstName || '',
-            last_name: billing?.lastName || '',
-            phone: {
-              area_code: '+52', // Ej: +52 para México
-              number: billing?.phone.replace(/\D/g, '') || '',
+          data: {
+            attributes: {
+              redirect_urls: {
+                success: `${window.location.origin}/?ref=ok`,
+                failed: `${window.location.origin}/?ref=fallo`,
+              },
+              currency: '032',
+              shipping: {
+                name: 'Precio fijo',
+                price: {
+                  currency: '032',
+                  amount: 2000,
+                },
+              },
+              items: cartItems.map((item) => ({
+                id: item.id,
+                name: item.title,
+                quantity: item.quantity,
+                unitPrice: {
+                  currency: '032',
+                  amount: item.discountedPrice,
+                },
+              })),
             },
-            address: {
-              zip_code: '0000', // Opcional
-              street_name: shipping?.addressLine1 || '',
-              street_number: shipping?.addressLine2 || '',
-              city_name: shipping?.city || '',
-              state_name: shipping?.state || '',
-              country_id: 'AR', // Código ISO del país
-            },
-          },
-          shipments: {
-            cost: 1530,
-            mode: 'not_specified',
-            receiver_address: {
-              zip_code: '0000',
-              street_name: '0000',
-              street_number: '0000',
-              floor: '0000',
-              apartment: '0000',
-              city_name: '0000',
-              state_name: '0000',
-              country_name: '0000',
-            },
-          },
-          back_urls: {
-            success: `${window.location.origin}/success`,
-            failure: `${window.location.origin}/failure`,
-            pending: `${window.location.origin}/pending`,
-          },
-          auto_return: 'approved', // Redirigir automáticamente si paga
-          payment_methods: {
-            excluded_payment_types: [{ id: 'atm' }], // Opcional: excluir métodos
-          },
-          metadata: {
-            orderId: Date.now().toString(), // Identificador único de tu sistema
           },
         }),
       });
@@ -104,6 +87,8 @@ const OrderSummary = ({ notes }) => {
 
       const data = await response.json();
 
+      await saveOrderToDB(data.id);
+      window.open(data.checkout_url, '_self'); // Abre la URL de checkout en una nueva pestaña
       return data.id; // ID de la preferencia creada
     } catch (err: any) {
       setError(err.message || 'No pudimos generar el pago. Intenta de nuevo.');
@@ -117,34 +102,34 @@ const OrderSummary = ({ notes }) => {
     console.log('billing', billing);
     validateBillingAndShipping();
     await saveBillingAndShippingToDB(user?.uid, billing, shipping); // Asegúrate de guardar los datos antes de proceder
-    const preferenceId = await createPreference();
-    await saveOrderToDB(preferenceId);
-    setPreferenceId(preferenceId);
+    await createPreference();
   };
 
   const validateBillingAndShipping = () => {
-    if (
-      !billing ||
-      !billing.firstName ||
-      !billing.lastName ||
-      !billing.email ||
-      !billing.phone
-    ) {
-      setError('Por favor completa los detalles de facturación.');
-      throw new Error('Por favor completa los detalles de facturación.');
-    }
+    // if (
+    //   !billing ||
+    //   !billing.firstName ||
+    //   !billing.lastName ||
+    //   !billing.email ||
+    //   !billing.phone
+    // ) {
+    //   setError('Por favor completa los detalles de facturación.');
+    //   throw new Error('Por favor completa los detalles de facturación.');
+    // }
     console.log('shipping', shipping);
 
-    // if (
-    //   !shipping ||
-    //   !shipping.addressLine1 ||
-    //   !shipping.city ||
-    //   !shipping.state ||
-    //   !shipping.country
-    // ) {
-    //   setError('Por favor completa los detalles de envío.');
-    //   throw new Error('Por favor completa los detalles de envío.');
-    // }
+    if (
+      !shipping ||
+      !shipping.addressLine1 ||
+      !shipping.city ||
+      !shipping.state ||
+      !shipping.country ||
+      !shipping.zipcode ||
+      !shipping.phone
+    ) {
+      setError('Por favor completa los detalles de envío.');
+      throw new Error('Por favor completa los detalles de envío.');
+    }
   };
 
   const saveOrderToDB = async (preferenceId: string) => {
@@ -153,17 +138,16 @@ const OrderSummary = ({ notes }) => {
 
       const orderId = uuidv4();
       const orderRef = doc(collection(db, 'orders'), orderId);
-      const { password, retypePassword, ...cleanedData } = billing;
 
-      const newOrder = {
+      const newOrder: Order = {
         id: orderId,
         userId: user?.uid,
         preferenceId,
-        billing: cleanedData,
+        billing: billing,
         shipping,
         items: cartItems,
         total: totalPrice,
-        createdAt: new Date(),
+        createdAt: '',
         status: 'pending',
         notes,
       };
@@ -189,13 +173,9 @@ const OrderSummary = ({ notes }) => {
       // Referencia al documento del usuario
       const userRef = doc(db, 'users', userId);
 
-      const { password, retypePassword, ...cleanedData } = billingData;
-
-      console.log('cleanedData', cleanedData);
-
       // Actualizar campos
       await updateDoc(userRef, {
-        billing: cleanedData,
+        billing: billingData,
         shipping: shippingData,
         updatedAt: new Date(),
       });
@@ -257,28 +237,21 @@ const OrderSummary = ({ notes }) => {
             </div>
           </div>
 
-          {/* <!-- Mercado Pago Button --> */}
-          {preferenceId && (
-            <Wallet initialization={{ preferenceId }} locale='es-AR' />
-          )}
-
-          {!preferenceId && (
-            <button
-              onClick={openMercadopagoPay}
-              disabled={loading}
-              className={`inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] ${
-                loading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-blue text-white hover:bg-blue-dark'
-              } ease-out duration-200 w-full justify-center mt-7.5`}
-            >
-              {loading ? 'Generando pago...' : 'Pagar con Mercado Pago'}
-            </button>
-          )}
+          <button
+            onClick={openMercadopagoPay}
+            disabled={loading}
+            className={`inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] ${
+              loading
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue text-white hover:bg-blue-dark'
+            } ease-out duration-200 w-full justify-center mt-7.5`}
+          >
+            {loading ? 'Generando pago...' : 'Ir al pago'}
+          </button>
 
           {/* Mostrar mensaje de error */}
           {error && (
-            <div className='mt-4 p-3 bg-red-100 text-red-700 rounded-md text-sm'>
+            <div className='mt-4 p-3 text-red-dark rounded-md text-sm'>
               {error}
             </div>
           )}
@@ -311,3 +284,80 @@ const OrderSummary = ({ notes }) => {
 };
 
 export default OrderSummary;
+
+const e = {
+  brand: 'Ford',
+  model: 'Fiesta Max',
+  year: 2011,
+  engine: '1.6L',
+  fuel: 'Nafta',
+  km_per_liter: 12,
+  tank_capacity_liters: 50,
+  maintenance: [
+    {
+      id: 'oil_change',
+      name: 'Cambio de Aceite',
+      every_km: 10000,
+    },
+    {
+      id: 'oil_filter_change',
+      name: 'Cambio de Filtro de Aceite',
+      every_km: 10000,
+    },
+    {
+      id: 'air_filter_change',
+      name: 'Cambio de filtro de aire',
+      every_km: 20000,
+    },
+    {
+      id: 'fuel_filter_change',
+      name: 'Cambio de filtro de combustible',
+      every_km: 20000,
+    },
+    {
+      id: 'tire_rotation',
+      name: 'Rotación de neumáticos',
+      every_km: 20000,
+    },
+    {
+      id: 'spark_plug_change',
+      name: 'Cambio de bujías',
+      every_km: 40000,
+    },
+    {
+      id: 'brake_check',
+      name: 'Revisión de frenos',
+      every_km: 40000,
+    },
+    {
+      id: 'coolant_check',
+      name: 'Revisión de refrigerante',
+      every_km: 40000,
+    },
+    {
+      id: 'timing_belt_change',
+      name: 'Cambio de correa de distribución',
+      every_km: 60000,
+    },
+    {
+      id: 'water_pump_change',
+      name: 'Cambio de bomba de agua si corresponde',
+      every_km: 60000,
+    },
+    {
+      id: 'suspension_check',
+      name: 'Revisión general de suspensión',
+      every_km: 100000,
+    },
+    {
+      id: 'clutch_check',
+      name: 'Chequeo de embrague',
+      every_km: 100000,
+    },
+    {
+      id: 'fluid_replacement',
+      name: 'Reemplazo de líquidos (frenos, dirección, caja)',
+      every_km: 100000,
+    },
+  ],
+};

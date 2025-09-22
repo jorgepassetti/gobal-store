@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 
 import { useModalContext } from '@/app/context/QuickViewModalContext';
 import { AppDispatch, useAppSelector } from '@/redux/store';
-import { addItemToCart } from '@/redux/features/cart-slice';
 import { useDispatch } from 'react-redux';
 import Image from 'next/image';
 import { usePreviewSlider } from '@/app/context/PreviewSliderContext';
@@ -31,13 +30,6 @@ const QuickViewModal = () => {
 
   // add to cart
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
-        ...product,
-        quantity,
-      }),
-    );
-
     closeModal();
   };
 
@@ -94,7 +86,7 @@ const QuickViewModal = () => {
             <div className='max-w-[526px] w-full'>
               <div className='flex gap-5'>
                 <div className='flex flex-col gap-5'>
-                  {product.imgs.thumbnails?.map((img, key) => (
+                  {product.media?.map((img, key) => (
                     <button
                       onClick={() => setActivePreview(key)}
                       key={key}
@@ -104,7 +96,7 @@ const QuickViewModal = () => {
                     >
                       {img ? (
                         <Image
-                          src={img || ''}
+                          src={img.url || ''}
                           alt='thumbnail'
                           width={61}
                           height={61}

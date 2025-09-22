@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { User } from 'firebase/auth';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,11 +9,51 @@ import {
   BillingAddress,
   setBillingAddress,
 } from '@/redux/features/billing-slice';
+import Select, { SingleValue } from 'react-select';
+import { PROVINCIAS_ARGENTINAS } from '@/lib/data';
+
+export interface Localidad {
+  idDeProvLocalidad: string;
+  localidad: string;
+  partido: string;
+  provincia: string;
+  codigosPostales: string[];
+}
+
+// Estilos personalizados para react-selec
+export const customSelectStyles = {
+  control: (provided: any) => ({
+    ...provided,
+    backgroundColor: '#f8fafc',
+    borderColor: '#cbd5e1',
+    borderRadius: '0.375rem',
+    padding: '0.25rem',
+    '&:hover': {
+      borderColor: '#94a3b8',
+    },
+  }),
+  menu: (provided: any) => ({
+    ...provided,
+    zIndex: 50,
+  }),
+};
 
 const Billing = () => {
   const { user, loading } = useAuth();
   const dispatch = useDispatch();
   const billingState = useSelector((state: RootState) => state.billingReducer);
+  const [localidades, setLocalidades] = useState<Localidad[]>([]);
+
+  // Estado para los selects
+  const [selectedProvincia, setSelectedProvincia] = useState<SingleValue<{
+    value: string;
+    label: string;
+  }> | null>(null);
+  const [selectedLocalidad, setSelectedLocalidad] = useState<SingleValue<{
+    value: string;
+    label: string;
+  }> | null>(null);
+  const [localidadSearch, setLocalidadSearch] = useState('');
 
   const [createAccount, setCreateAccount] = useState(
     billingState.createAccount,
@@ -34,10 +74,11 @@ const Billing = () => {
     address: billingState.address || user?.billing?.address,
     addressTwo: billingState.addressTwo || user?.billing?.addressTwo,
     city: billingState.city || user?.billing?.city,
+    state: billingState.state || user?.billing?.state,
     country: billingState.country || user?.billing?.country || 'Argentina',
   });
 
-  // Sync form with Redux on mount (in case user came back to page)
+  // Sync form with Redux on mount
   useEffect(() => {
     setFormData({
       firstName: billingState.firstName || user?.billing?.firstName,
@@ -47,17 +88,103 @@ const Billing = () => {
       address: billingState.address || user?.billing?.address,
       addressTwo: billingState.addressTwo || user?.billing?.addressTwo,
       city: billingState.city || user?.billing?.city,
+      state: billingState.state || user?.billing?.state,
       country: billingState.country || user?.billing?.country || 'Argentina',
     });
     setCreateAccount(billingState.createAccount);
     setPassword(billingState.password || '');
     setRetypePassword(billingState.retypePassword || '');
-  }, [billingState, isLoggedIn, user]);
+
+    // Si ya había provincia guardada, setearla
+    if (billingState.state) {
+      const matchedProvincia = PROVINCIAS_ARGENTINAS.find(
+        (p) => p.value === billingState.state.toUpperCase(),
+      );
+      if (matchedProvincia) {
+        setSelectedProvincia(matchedProvincia);
+      }
+    }
+
+    // Si ya había ciudad guardada, intentar setearla (solo si provincia ya está)
+    if (billingState.city && selectedProvincia) {
+      const matchedLocalidad = localidades
+        .filter(
+          (loc) => loc.provincia.toUpperCase() === selectedProvincia.value,
+        )
+        .find(
+          (loc) =>
+            loc.localidad.trim().toUpperCase() ===
+            billingState.city.toUpperCase(),
+        );
+      if (matchedLocalidad) {
+        setSelectedLocalidad({
+          value: matchedLocalidad.idDeProvLocalidad,
+          label: `${matchedLocalidad.localidad.trim()} (${matchedLocalidad.codigosPostales.join(
+            ', ',
+          )})`,
+        });
+      }
+    }
+  }, [billingState, isLoggedIn, user, localidades, selectedProvincia]);
+
+  useEffect(() => {
+    fetch('/data/localidades.json')
+      .then((res) => res.json())
+      .then((data: Localidad[]) => {
+        setLocalidades(data);
+      })
+      .catch((err) => {
+        console.error('Error al cargar localidades:', err);
+      });
+  }, []);
+
+  // Filtrar localidades según provincia seleccionada
+  const filteredLocalidades = useMemo(() => {
+    if (!selectedProvincia) return [];
+    return localidades
+      .filter((loc) => loc.provincia.toUpperCase() === selectedProvincia.value)
+      .map((loc) => ({
+        value: loc.idDeProvLocalidad,
+        label: `${loc.localidad.trim()} (${loc.codigosPostales.join(', ')})`,
+        raw: loc.localidad.trim(),
+      }));
+  }, [localidades, selectedProvincia]);
+
+  // Filtrar por búsqueda
+  const searchedLocalidades = useMemo(() => {
+    if (!localidadSearch) return filteredLocalidades;
+    return filteredLocalidades.filter((loc) =>
+      loc.raw.toLowerCase().includes(localidadSearch.toLowerCase()),
+    );
+  }, [filteredLocalidades, localidadSearch]);
+
+  // Manejar cambio de provincia
+  const handleProvinciaChange = (
+    option: SingleValue<{ value: string; label: string }>,
+  ) => {
+    setSelectedProvincia(option);
+    setSelectedLocalidad(null);
+    setLocalidadSearch('');
+    updateFormData('state', option?.value || '');
+    updateFormData('city', ''); // Limpiar ciudad al cambiar provincia
+  };
+
+  // Manejar cambio de localidad
+  const handleLocalidadChange = (
+    option: SingleValue<{ value: string; label: string }>,
+  ) => {
+    setSelectedLocalidad(option);
+    const selectedLoc = localidades.find(
+      (loc) => loc.idDeProvLocalidad === option?.value,
+    );
+    updateFormData('city', selectedLoc?.localidad.trim() || '');
+  };
 
   // If auth state is still loading, show loader
   if (loading) {
     return <div className='p-8 text-center'>Cargando...</div>;
   }
+
   // Validate passwords
   const isPasswordValid = password === retypePassword && password.length >= 6;
 
@@ -68,7 +195,6 @@ const Billing = () => {
       [field]: value,
     }));
 
-    // Dispatch to Redux immediately
     dispatch(setBillingAddress({ [field]: value }));
   };
 
@@ -80,7 +206,6 @@ const Billing = () => {
     setCreateAccount(checked);
     dispatch(setBillingAddress({ createAccount: checked }));
 
-    // Clear passwords if unchecked
     if (!checked) {
       setPassword('');
       setRetypePassword('');
@@ -122,7 +247,6 @@ const Billing = () => {
             <label htmlFor='firstName' className='block mb-2.5'>
               Nombre <span className='text-red'>*</span>
             </label>
-
             <input
               type='text'
               name='firstName'
@@ -139,7 +263,6 @@ const Billing = () => {
             <label htmlFor='lastName' className='block mb-2.5'>
               Apellido <span className='text-red'>*</span>
             </label>
-
             <input
               type='text'
               name='lastName'
@@ -159,19 +282,15 @@ const Billing = () => {
             País / Región
             <span className='text-red'>*</span>
           </label>
-
           <div className='relative'>
             <select
-              value={formData.country}
+              value={'Argentina'}
               onChange={(e) => updateFormData('country', e.target.value)}
               className='w-full bg-gray-1 rounded-md border border-gray-3 text-dark-4 py-3 pl-5 pr-9 duration-200 appearance-none outline-none focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20'
+              disabled={true}
             >
               <option value='Argentina'>Argentina</option>
-              <option value='México'>México</option>
-              <option value='Colombia'>Colombia</option>
-              <option value='Chile'>Chile</option>
             </select>
-
             <span className='absolute right-4 top-1/2 -translate-y-1/2 text-dark-4'>
               <svg
                 className='fill-current'
@@ -198,7 +317,6 @@ const Billing = () => {
             Dirección
             <span className='text-red'>*</span>
           </label>
-
           <input
             type='text'
             name='address'
@@ -209,7 +327,6 @@ const Billing = () => {
             className='rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20'
             required
           />
-
           <div className='mt-5'>
             <input
               type='text'
@@ -223,20 +340,44 @@ const Billing = () => {
           </div>
         </div>
 
-        {/* Ciudad */}
+        {/* Dropdown de Provincia */}
+        <div className='mb-5'>
+          <label htmlFor='state' className='block mb-2.5'>
+            Provincia <span className='text-red'>*</span>
+          </label>
+          <Select
+            id='state'
+            options={PROVINCIAS_ARGENTINAS}
+            value={selectedProvincia}
+            onChange={handleProvinciaChange}
+            placeholder='Selecciona una provincia...'
+            isClearable
+            styles={customSelectStyles}
+            noOptionsMessage={() => 'No se encontraron provincias'}
+          />
+        </div>
+
+        {/* Dropdown de Localidad */}
         <div className='mb-5'>
           <label htmlFor='city' className='block mb-2.5'>
-            Ciudad <span className='text-red'>*</span>
+            Localidad <span className='text-red'>*</span>
           </label>
-
-          <input
-            type='text'
-            name='city'
+          <Select
             id='city'
-            value={formData.city}
-            onChange={(e) => updateFormData('city', e.target.value)}
-            className='rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20'
-            required
+            options={searchedLocalidades}
+            value={selectedLocalidad}
+            onChange={handleLocalidadChange}
+            onInputChange={(value) => setLocalidadSearch(value)}
+            inputValue={localidadSearch}
+            placeholder={
+              !selectedProvincia
+                ? 'Selecciona primero una provincia'
+                : 'Escribe para buscar localidad...'
+            }
+            isDisabled={!selectedProvincia}
+            isClearable
+            styles={customSelectStyles}
+            noOptionsMessage={() => 'No se encontraron localidades'}
           />
         </div>
 
@@ -245,7 +386,6 @@ const Billing = () => {
           <label htmlFor='phone' className='block mb-2.5'>
             Teléfono <span className='text-red'>*</span>
           </label>
-
           <input
             type='text'
             name='phone'
@@ -263,7 +403,6 @@ const Billing = () => {
           <label htmlFor='email' className='block mb-2.5'>
             Correo electrónico <span className='text-red'>*</span>
           </label>
-
           <input
             type='email'
             name='email'

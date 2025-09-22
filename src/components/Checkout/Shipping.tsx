@@ -5,35 +5,162 @@ import {
   ShippingAddress,
 } from '@/redux/features/shipping-slice';
 import { RootState } from '@/redux/store';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import Select, { SingleValue } from 'react-select';
+import { PROVINCIAS_ARGENTINAS } from '@/lib/data';
+import { customSelectStyles, Localidad } from './Billing';
+import { useAuth } from '@/context/AuthContext';
 
 const Shipping = () => {
+  const { user } = useAuth();
   const dispatch = useDispatch();
+  const [localidades, setLocalidades] = useState<Localidad[]>([]);
   const shippingState = useSelector(
     (state: RootState) => state.shippingReducer,
   );
   const [dropdown, setDropdown] = useState(false);
+  const [selectedProvincia, setSelectedProvincia] = useState<SingleValue<{
+    value: string;
+    label: string;
+  }> | null>(null);
+  const [selectedLocalidad, setSelectedLocalidad] = useState<SingleValue<{
+    value: string;
+    label: string;
+  }> | null>(null);
+  const [localidadSearch, setLocalidadSearch] = useState('');
 
   // Local state for controlled inputs (optional, but helps avoid re-renders)
   const [formData, setFormData] = useState<ShippingAddress>({
-    country: shippingState.country || '',
-    addressLine1: shippingState.addressLine1 || '',
-    addressLine2: shippingState.addressLine2 || '',
-    city: shippingState.city || '',
-    state: shippingState.state || '',
+    country: shippingState.country || user?.shipping?.country || '',
+    addressLine1:
+      shippingState.addressLine1 || user?.shipping?.addressLine1 || '',
+    addressLine2:
+      shippingState.addressLine2 || user?.shipping?.addressLine2 || '',
+    city: shippingState.city || user?.shipping?.city || '',
+    state: shippingState.state || user?.shipping?.state || '',
+    zipcode: shippingState.zipcode || user?.shipping?.zipcode || '',
+    phone: shippingState.phone || user?.shipping?.phone || '',
   });
 
   // Sync form state with Redux on mount or when Redux updates
   React.useEffect(() => {
     setFormData({
-      country: shippingState.country || '',
-      addressLine1: shippingState.addressLine1 || '',
-      addressLine2: shippingState.addressLine2 || '',
-      city: shippingState.city || '',
-      state: shippingState.state || '',
+      country: shippingState.country || user?.shipping?.country || '',
+      addressLine1:
+        shippingState.addressLine1 || user?.shipping?.addressLine1 || '',
+      addressLine2:
+        shippingState.addressLine2 || user?.shipping?.addressLine2 || '',
+      city: shippingState.city || user?.shipping?.city || '',
+      state: shippingState.state || user?.shipping?.state || '',
+      zipcode: shippingState.zipcode || user?.shipping?.zipcode || '',
+      phone: shippingState.phone || user?.shipping?.phone || '',
     });
-  }, [shippingState]);
+
+    if (shippingState.state) {
+      const matchedProvincia = PROVINCIAS_ARGENTINAS.find(
+        (p) => p.value === shippingState.state.toUpperCase(),
+      );
+      if (matchedProvincia) {
+        setSelectedProvincia(matchedProvincia);
+      }
+    }
+    console.log(
+      'shippingState.city, user?.shipping?.city, selectedProvincia',
+      shippingState.city,
+      user?.shipping?.city,
+      selectedProvincia,
+    );
+
+    if (shippingState.state || user?.shipping?.state) {
+      const matchedProvincia = PROVINCIAS_ARGENTINAS.find(
+        (p) =>
+          p.value ===
+          (shippingState.state || user?.shipping?.state).toUpperCase(),
+      );
+      if (matchedProvincia) {
+        setSelectedProvincia(matchedProvincia);
+      }
+    }
+
+    // Si ya había ciudad guardada, intentar setearla (solo si provincia ya está)
+    if ((shippingState.city || user?.shipping?.city) && selectedProvincia) {
+      const matchedLocalidad = localidades
+        .filter(
+          (loc) => loc.provincia.toUpperCase() === selectedProvincia.value,
+        )
+        .find(
+          (loc) =>
+            loc.localidad.trim().toUpperCase() ===
+            (shippingState.city || user?.shipping?.city).toUpperCase(),
+        );
+      console.log('matchedLocalidad', matchedLocalidad);
+
+      if (matchedLocalidad) {
+        setSelectedLocalidad({
+          value: matchedLocalidad.idDeProvLocalidad,
+          label: matchedLocalidad.localidad.trim(),
+        });
+      }
+    }
+  }, [shippingState, user?.shipping]);
+
+  useEffect(() => {
+    fetch('/data/localidades.json')
+      .then((res) => res.json())
+      .then((data: Localidad[]) => {
+        setLocalidades(data);
+      })
+      .catch((err) => {
+        console.error('Error al cargar localidades:', err);
+      });
+  }, []);
+
+  // Filtrar localidades según provincia seleccionada
+  const filteredLocalidades = useMemo(() => {
+    if (!selectedProvincia) return [];
+    return localidades
+      .filter((loc) => loc.provincia.toUpperCase() === selectedProvincia.value)
+      .map((loc) => ({
+        value: loc.idDeProvLocalidad,
+        label: loc.localidad,
+        raw: loc.localidad.trim(),
+      }));
+  }, [localidades, selectedProvincia]);
+
+  // Filtrar por búsqueda
+  const searchedLocalidades = useMemo(() => {
+    if (!localidadSearch) return filteredLocalidades;
+    return filteredLocalidades.filter((loc) =>
+      loc.raw.toLowerCase().includes(localidadSearch.toLowerCase()),
+    );
+  }, [filteredLocalidades, localidadSearch]);
+
+  // Manejar cambio de provincia
+  const handleProvinciaChange = (
+    option: SingleValue<{ value: string; label: string }>,
+  ) => {
+    setSelectedProvincia(option);
+    setSelectedLocalidad(null);
+    setLocalidadSearch('');
+    updateFormField('state', option?.value || '');
+    updateFormField('city', ''); // Limpiar ciudad al cambiar provincia
+  };
+
+  // Manejar cambio de localidad
+  const handleLocalidadChange = (
+    option: SingleValue<{ value: string; label: string }>,
+  ) => {
+    setSelectedLocalidad(option);
+    const selectedLoc = localidades.find(
+      (loc) => loc.idDeProvLocalidad === option?.value,
+    );
+    updateFormField('city', selectedLoc?.localidad.trim() || '');
+    updateFormField(
+      'zipcode',
+      selectedLoc?.codigosPostales.join().trim() || '',
+    );
+  };
 
   // Handle input change + dispatch to Redux
   const updateFormField = (field: keyof ShippingAddress, value: string) => {
@@ -46,32 +173,14 @@ const Shipping = () => {
 
   return (
     <div className='bg-white shadow-1 rounded-[10px] mt-7.5'>
-      <div
-        onClick={() => setDropdown(!dropdown)}
-        className='cursor-pointer flex items-center gap-2.5 font-medium text-lg text-dark py-5 px-5.5'
-      >
-        ¿Enviar a una dirección diferente?
-        <svg
-          className={`fill-current ease-out duration-200 ${
-            dropdown && 'rotate-180'
-          }`}
-          width='22'
-          height='22'
-          viewBox='0 0 22 22'
-          fill='none'
-          xmlns='http://www.w3.org/2000/svg'
-        >
-          <path
-            fillRule='evenodd'
-            clipRule='evenodd'
-            d='M4.06103 7.80259C4.30813 7.51431 4.74215 7.48092 5.03044 7.72802L10.9997 12.8445L16.9689 7.72802C17.2572 7.48092 17.6912 7.51431 17.9383 7.80259C18.1854 8.09088 18.1521 8.5249 17.8638 8.772L11.4471 14.272C11.1896 14.4927 10.8097 14.4927 10.5523 14.272L4.1356 8.772C3.84731 8.5249 3.81393 8.09088 4.06103 7.80259Z'
-            fill=''
-          />
-        </svg>
+      <div className='border-b border-gray-3 py-5 px-4 sm:px-8.5'>
+        <h3 className='font-medium text-xl text-dark'>
+          Enviar a esta dirección
+        </h3>
       </div>
 
       {/* <!-- menú desplegable --> */}
-      <div className={`p-4 sm:p-8.5 ${dropdown ? 'block' : 'hidden'}`}>
+      <div className={`p-4 sm:p-8.5`}>
         {/* País / Región */}
         <div className='mb-5'>
           <label htmlFor='countryName' className='block mb-2.5'>
@@ -143,42 +252,68 @@ const Shipping = () => {
           </div>
         </div>
 
-        {/* Provincia (state) */}
+        {/* Dropdown de Provincia */}
         <div className='mb-5'>
           <label htmlFor='state' className='block mb-2.5'>
-            Provincia
+            Provincia <span className='text-red'>*</span>
           </label>
-
-          <input
-            type='text'
+          <Select
             id='state'
-            name='state'
-            value={formData.state}
-            onChange={(e) => updateFormField('state', e.target.value)}
-            className='rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20'
+            required
+            options={PROVINCIAS_ARGENTINAS}
+            value={selectedProvincia}
+            onChange={handleProvinciaChange}
+            placeholder='Selecciona una provincia...'
+            isClearable
+            styles={customSelectStyles}
+            noOptionsMessage={() => 'No se encontraron provincias'}
           />
         </div>
 
-        {/* Ciudad (city) */}
+        {/* Dropdown de Localidad */}
         <div className='mb-5'>
           <label htmlFor='city' className='block mb-2.5'>
-            Ciudad
-            <span className='text-red'>*</span>
+            Localidad <span className='text-red'>*</span>
+          </label>
+          <Select
+            id='city'
+            required
+            options={searchedLocalidades}
+            value={selectedLocalidad}
+            onChange={handleLocalidadChange}
+            onInputChange={(value) => setLocalidadSearch(value)}
+            inputValue={localidadSearch}
+            placeholder={
+              !selectedProvincia
+                ? 'Selecciona primero una provincia'
+                : 'Escribe para buscar localidad...'
+            }
+            isDisabled={!selectedProvincia}
+            isClearable
+            styles={customSelectStyles}
+            noOptionsMessage={() => 'No se encontraron localidades'}
+          />
+        </div>
+
+        <div className='mb-5'>
+          <label htmlFor='phone' className='block mb-2.5'>
+            Código Postal
           </label>
 
           <input
             type='text'
-            id='city'
-            name='city'
-            value={formData.city}
-            onChange={(e) => updateFormField('city', e.target.value)}
+            disabled
+            id='zipcode'
+            name='zipcode'
+            value={formData.zipcode}
+            onChange={(e) => updateFormField('zipcode', e.target.value)}
             className='rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20'
           />
         </div>
 
         {/* Teléfono (phone) — Optional: Add if needed */}
         {/* Uncomment if you want to collect phone in shipping too */}
-        {/* 
+
         <div className='mb-5'>
           <label htmlFor='phone' className='block mb-2.5'>
             Teléfono
@@ -189,31 +324,12 @@ const Shipping = () => {
             type='text'
             id='phone'
             name='phone'
+            required
             value={formData.phone}
             onChange={(e) => updateFormField('phone', e.target.value)}
             className='rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20'
           />
         </div>
-        */}
-
-        {/* Correo electrónico (email) — Optional */}
-        {/* 
-        <div>
-          <label htmlFor='email' className='block mb-2.5'>
-            Correo electrónico
-            <span className='text-red'>*</span>
-          </label>
-
-          <input
-            type='email'
-            id='email'
-            name='email'
-            value={formData.email}
-            onChange={(e) => updateFormField('email', e.target.value)}
-            className='rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20'
-          />
-        </div>
-        */}
       </div>
     </div>
   );
