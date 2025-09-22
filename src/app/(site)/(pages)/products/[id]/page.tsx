@@ -45,6 +45,13 @@ export default function ProductPage({ params }) {
     );
   }
 
+  if (loading) {
+    <div className='flex items-center justify-center py-16'>
+      <div className='inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]'></div>
+      <span className='ml-3 text-gray-500'>Cargando productos...</span>
+    </div>;
+  }
+
   return (
     <>
       {/* JSON-LD for SEO */}

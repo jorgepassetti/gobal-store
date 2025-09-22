@@ -8,6 +8,7 @@ import { addItemToCart, CartItem } from '@/redux/features/cart-slice';
 import { AppDispatch } from '@/redux/store';
 import { Product } from '@/types/product';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 
@@ -17,6 +18,24 @@ export default function ProductClient({ product }: { product: Product }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+
+  const handleBuyNow = () => {
+    const cartItem: CartItem = {
+      price: product.price_before_discount,
+      discountedPrice: product.price,
+      id: parseInt(product.id),
+      title: product.title,
+      quantity: 1,
+      imgs: {
+        thumbnails: product.media.map((img) => img.url),
+        previews: product.media.map((img) => img.url),
+      },
+    };
+
+    dispatch(addItemToCart(cartItem));
+    router.push(!!user ? '/checkout' : '/signup');
+  };
 
   const handleAddToCart = () => {
     console.log('Agregar al carrito');
@@ -148,7 +167,10 @@ export default function ProductClient({ product }: { product: Product }) {
               </div>
 
               <div className='flex flex-col space-y-4 mb-8'>
-                <button className='bg-blue hover:bg-blue-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-5 focus:ring-offset-2'>
+                <button
+                  onClick={handleBuyNow}
+                  className='bg-blue hover:bg-blue-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-5 focus:ring-offset-2'
+                >
                   Comprar ahora
                 </button>
                 <button
