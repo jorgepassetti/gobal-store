@@ -3,15 +3,39 @@ import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { Product } from '@/types/product';
 import ProductClient from '../../../../../components/products/ProductClient';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export default async function ProductPage({ params }) {
-  const params2: any = Object.assign({}, params);
-  console.log(params2.id);
+export default function ProductPage({ params }) {
+  const { id } = useParams();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const ref = doc(db, 'products', params.id);
-  const snapshot = await getDoc(ref);
+  useEffect(() => {
+    if (id) {
+      loadProduct();
+    }
+  }, [id]);
 
-  if (!snapshot.exists()) {
+  const loadProduct = async () => {
+    try {
+      setLoading(true);
+      const ref = doc(db, 'products', id as string);
+      const snapshot = await getDoc(ref);
+      const product = {
+        id: snapshot.id,
+        ...snapshot.data(),
+        createdAt: snapshot.data().createdAt?.toDate().toISOString() || null,
+      } as unknown as Product;
+
+      setProduct(product);
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!product && !loading) {
     return (
       <div className='flex items-center justify-center h-screen'>
         <h1 className='text-2xl font-bold text-gray-800'>
@@ -20,12 +44,6 @@ export default async function ProductPage({ params }) {
       </div>
     );
   }
-
-  const product = {
-    id: snapshot.id,
-    ...snapshot.data(),
-    createdAt: snapshot.data().createdAt?.toDate().toISOString() || null,
-  } as unknown as Product;
 
   return (
     <>
@@ -36,13 +54,13 @@ export default async function ProductPage({ params }) {
           __html: JSON.stringify({
             '@context': 'https://schema.org/',
             '@type': 'Product',
-            name: product.title,
-            image: product.media.map((m) => m.url),
-            description: product.title,
+            name: product?.title,
+            image: product?.media.map((m) => m.url),
+            description: product?.title,
             offers: {
               '@type': 'Offer',
               priceCurrency: 'ARS',
-              price: product.price,
+              price: product?.price,
               availability: 'https://schema.org/InStock',
             },
           }),
