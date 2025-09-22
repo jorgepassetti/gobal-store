@@ -59,33 +59,28 @@ const ShopWithSidebar = () => {
 
   const categories = [
     {
-      name: 'Desktop',
+      name: 'Electrodomesticos',
       products: 10,
       isRefined: true,
     },
     {
-      name: 'Laptop',
+      name: 'Laptops',
       products: 12,
       isRefined: false,
     },
     {
-      name: 'Monitor',
+      name: 'Indumentaria',
       products: 30,
       isRefined: false,
     },
     {
-      name: 'UPS',
+      name: 'Relojes',
       products: 23,
       isRefined: false,
     },
     {
-      name: 'Phone',
+      name: 'Mascotas',
       products: 10,
-      isRefined: false,
-    },
-    {
-      name: 'Watch',
-      products: 13,
       isRefined: false,
     },
   ];

@@ -1,13 +1,13 @@
+'use client';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { Product } from '@/types/product';
-import ProductClient from './ProductClient';
+import ProductClient from '../../../../../components/products/ProductClient';
 
-export default async function ProductPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function ProductPage({ params }) {
+  const params2: any = Object.assign({}, params);
+  console.log(params2.id);
+
   const ref = doc(db, 'products', params.id);
   const snapshot = await getDoc(ref);
 
@@ -55,18 +55,18 @@ export default async function ProductPage({
   );
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  const ref = doc(db, 'products', params.id);
-  const snapshot = await getDoc(ref);
-  const product = snapshot.exists() ? snapshot.data() : null;
+// export async function generateMetadata({ params }: { params: { id: string } }) {
+//   const ref = doc(db, 'products', params.id);
+//   const snapshot = await getDoc(ref);
+//   const product = snapshot.exists() ? snapshot.data() : null;
 
-  return {
-    title: product ? product.title : 'Producto no encontrado',
-    description: product?.title || 'Compra productos de calidad',
-    openGraph: {
-      title: product?.title,
-      description: product?.title,
-      images: product?.media?.map((m: any) => m.url) || [],
-    },
-  };
-}
+//   return {
+//     title: product ? product.title : 'Producto no encontrado',
+//     description: product?.title || 'Compra productos de calidad',
+//     openGraph: {
+//       title: product?.title,
+//       description: product?.title,
+//       images: product?.media?.map((m: any) => m.url) || [],
+//     },
+//   };
+// }

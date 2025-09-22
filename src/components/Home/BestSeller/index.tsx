@@ -2,7 +2,6 @@ import React from 'react';
 import SingleItem from './SingleItem';
 import Image from 'next/image';
 import Link from 'next/link';
-import shopData from '@/components/Shop/shopData';
 
 const BestSeller = () => {
   return (
@@ -28,9 +27,9 @@ const BestSeller = () => {
 
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7.5'>
           {/* <!-- Best Sellers item --> */}
-          {shopData.slice(1, 7).map((item, key) => (
+          {/* {shopData.slice(1, 7).map((item, key) => (
             <SingleItem item={item} key={key} />
-          ))}
+          ))} */}
         </div>
 
         <div className='text-center mt-12.5'>
