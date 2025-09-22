@@ -15,13 +15,11 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
-type ProductPageProps = {
-  params: {
-    id: string; // este "id" viene del [id] en la carpeta
-  };
+type ProductPageParams = {
+  id: string;
 };
 
-export default function ProductPage({ params }: ProductPageProps) {
+export default function ProductPage({ params }: { params: any }) {
   const { user } = useAuth();
   const { openCartModal } = useCartModalContext();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);

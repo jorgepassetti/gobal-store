@@ -4,7 +4,7 @@ const shopData: Product[] = [
     title: 'Havit HV-G69 USB Gamepad',
     price: 59.0,
     discountedPrice: 29.0,
-    id: 1,
+    id: '2',
     media: [
       {
         type: 'image',
@@ -26,7 +26,7 @@ const shopData: Product[] = [
     title: 'iPhone 14 Plus , 6/128GB',
     price: 899.0,
     discountedPrice: 99.0,
-    id: 2,
+    id: '2',
     media: [
       {
         type: 'image',
@@ -48,7 +48,7 @@ const shopData: Product[] = [
     title: 'Apple iMac M1 24-inch 2021',
     price: 59.0,
     discountedPrice: 29.0,
-    id: 3,
+    id: '3',
     media: [
       {
         type: 'image',
@@ -70,7 +70,7 @@ const shopData: Product[] = [
     title: 'MacBook Air M1 chip, 8/256GB',
     price: 59.0,
     discountedPrice: 29.0,
-    id: 4,
+    id: '4',
     media: [
       {
         type: 'image',
@@ -92,7 +92,7 @@ const shopData: Product[] = [
     title: 'Apple Watch Ultra',
     price: 99.0,
     discountedPrice: 29.0,
-    id: 5,
+    id: '5',
     media: [
       {
         type: 'image',
@@ -114,7 +114,7 @@ const shopData: Product[] = [
     title: 'Logitech MX Master 3 Mouse',
     price: 59.0,
     discountedPrice: 29.0,
-    id: 6,
+    id: '6',
     media: [
       {
         type: 'image',
@@ -136,7 +136,7 @@ const shopData: Product[] = [
     title: 'Apple iPad Air 5th Gen - 64GB',
     price: 59.0,
     discountedPrice: 29.0,
-    id: 7,
+    id: '7',
     media: [
       {
         type: 'image',
@@ -158,7 +158,7 @@ const shopData: Product[] = [
     title: 'Asus RT Dual Band Router',
     price: 59.0,
     discountedPrice: 29.0,
-    id: 8,
+    id: '8',
     media: [
       {
         type: 'image',

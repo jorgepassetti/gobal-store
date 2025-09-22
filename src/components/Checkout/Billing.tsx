@@ -55,14 +55,6 @@ const Billing = () => {
   }> | null>(null);
   const [localidadSearch, setLocalidadSearch] = useState('');
 
-  const [createAccount, setCreateAccount] = useState(
-    billingState.createAccount,
-  );
-  const [password, setPassword] = useState(billingState.password || '');
-  const [retypePassword, setRetypePassword] = useState(
-    billingState.retypePassword || '',
-  );
-
   const isLoggedIn = !!user;
 
   // Initialize form state from Redux (or defaults)
@@ -91,9 +83,6 @@ const Billing = () => {
       state: billingState.state || user?.billing?.state,
       country: billingState.country || user?.billing?.country || 'Argentina',
     });
-    setCreateAccount(billingState.createAccount);
-    setPassword(billingState.password || '');
-    setRetypePassword(billingState.retypePassword || '');
 
     // Si ya había provincia guardada, setearla
     if (billingState.state) {
@@ -185,9 +174,6 @@ const Billing = () => {
     return <div className='p-8 text-center'>Cargando...</div>;
   }
 
-  // Validate passwords
-  const isPasswordValid = password === retypePassword && password.length >= 6;
-
   // Update form field and dispatch to Redux
   const updateFormData = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({
@@ -196,42 +182,6 @@ const Billing = () => {
     }));
 
     dispatch(setBillingAddress({ [field]: value }));
-  };
-
-  // Handle checkbox change
-  const handleCreateAccountToggle = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const checked = e.target.checked;
-    setCreateAccount(checked);
-    dispatch(setBillingAddress({ createAccount: checked }));
-
-    if (!checked) {
-      setPassword('');
-      setRetypePassword('');
-      dispatch(
-        setBillingAddress({ password: undefined, retypePassword: undefined }),
-      );
-    }
-  };
-
-  // Handle password changes
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setPassword(value);
-    if (createAccount) {
-      dispatch(setBillingAddress({ password: value }));
-    }
-  };
-
-  const handleRetypePasswordChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const value = e.target.value;
-    setRetypePassword(value);
-    if (createAccount) {
-      dispatch(setBillingAddress({ retypePassword: value }));
-    }
   };
 
   return (
@@ -414,102 +364,6 @@ const Billing = () => {
             required
           />
         </div>
-
-        {/* Checkbox: Crear cuenta */}
-        {!isLoggedIn && (
-          <div className='mb-6'>
-            <label
-              htmlFor='checkboxLabelTwo'
-              className='text-dark flex cursor-pointer select-none items-center gap-2'
-            >
-              <div className='relative'>
-                <input
-                  type='checkbox'
-                  id='checkboxLabelTwo'
-                  checked={createAccount}
-                  onChange={handleCreateAccountToggle}
-                  className='sr-only'
-                />
-                <div className='mr-2 flex h-4 w-4 items-center justify-center rounded border border-gray-4 bg-white'>
-                  {createAccount && (
-                    <span className='opacity-100 text-white'>
-                      <svg
-                        width='24'
-                        height='24'
-                        viewBox='0 0 24 24'
-                        fill='none'
-                        xmlns='http://www.w3.org/2000/svg'
-                      >
-                        <rect
-                          x='4'
-                          y='4.00006'
-                          width='16'
-                          height='16'
-                          rx='4'
-                          fill='#3C50E0'
-                        />
-                        <path
-                          fillRule='evenodd'
-                          clipRule='evenodd'
-                          d='M16.3103 9.25104C16.471 9.41178 16.5612 9.62978 16.5612 9.85707C16.5612 10.0844 16.471 10.3024 16.3103 10.4631L12.0243 14.7491C11.8635 14.9098 11.6455 15.0001 11.4182 15.0001C11.191 15.0001 10.973 14.9098 10.8122 14.7491L8.24062 12.1775C8.08448 12.0158 7.99808 11.7993 8.00003 11.5745C8.00199 11.3498 8.09214 11.1348 8.25107 10.9759C8.41 10.8169 8.62499 10.7268 8.84975 10.7248C9.0745 10.7229 9.29103 10.8093 9.4527 10.9654L11.4182 12.931L15.0982 9.25104C15.2589 9.09034 15.4769 9.00006 15.7042 9.00006C15.9315 9.00006 16.1495 9.09034 16.3103 9.25104Z'
-                          fill='white'
-                        />
-                      </svg>
-                    </span>
-                  )}
-                </div>
-              </div>
-              Crear una cuenta
-            </label>
-
-            {createAccount && (
-              <div className='mt-6 space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200'>
-                <h3 className='font-medium text-dark'>
-                  Crea una contraseña para tu cuenta
-                </h3>
-
-                <div>
-                  <label htmlFor='password' className='block mb-2.5'>
-                    Contraseña <span className='text-red'>*</span>
-                  </label>
-                  <input
-                    type='password'
-                    name='password'
-                    id='password'
-                    value={password}
-                    onChange={handlePasswordChange}
-                    placeholder='Mínimo 6 caracteres'
-                    className='rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20'
-                    required
-                  />
-                  {password && !isPasswordValid && (
-                    <p className='mt-1 text-sm text-red-500'>
-                      {password.length < 6
-                        ? 'La contraseña debe tener al menos 6 caracteres.'
-                        : 'Las contraseñas no coinciden.'}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor='retypePassword' className='block mb-2.5'>
-                    Repetir contraseña <span className='text-red'>*</span>
-                  </label>
-                  <input
-                    type='password'
-                    name='retypePassword'
-                    id='retypePassword'
-                    value={retypePassword}
-                    onChange={handleRetypePasswordChange}
-                    placeholder='Confirma tu contraseña'
-                    className='rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20'
-                    required
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Nota informativa si ya está logueado */}
         {isLoggedIn && (
